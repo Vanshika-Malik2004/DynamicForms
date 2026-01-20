@@ -10,6 +10,14 @@ A production-ready Express.js backend for managing dynamic candidate application
 - **Validation**: Zod
 - **Authorization**: Email-based admin whitelist
 
+### Architectural Flow
+1.  **Request**: Client sends HTTP request with Firebase ID Token.
+2.  **Middleware**: `authenticate` middleware verifies the token and decodes user info. `requireAdmin` checks permissions if needed.
+3.  **Validation**: Zod schemas validate the request body (headers, types, required fields).
+4.  **Controller**: Route handlers execute business logic (e.g., dynamic field rendering, data processing).
+5.  **Database**: Data is read from or written to Firestore.
+6.  **Response**: JSON response is sent back to the client.
+
 ## 📋 Prerequisites
 
 - Node.js (v16 or higher)
