@@ -10,12 +10,28 @@ const submissionsRouter = require('./routes/submissions');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-
 // Middleware Configuration
+const cors = require("cors");
+const allowedOrigins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:3000",
+    "https://YOUR_VERCEL_DOMAIN.vercel.app",
+];
 
-app.use(cors());
+app.use(
+    cors({
+        origin: function (origin, cb) {
+            if (!origin) return cb(null, true);
+            if (allowedOrigins.includes(origin)) return cb(null, true);
+            return cb(new Error("Not allowed by CORS"));
+        },
+        credentials: true,
+    })
+);
+
+
 app.use(express.json());
-
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
     next();

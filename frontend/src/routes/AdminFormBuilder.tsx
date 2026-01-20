@@ -14,7 +14,6 @@ export function AdminFormBuilder() {
     const queryClient = useQueryClient();
     const [permanentFields, setPermanentFields] = useState<ExtraField[]>([]);
     const [extraFields, setExtraFields] = useState<ExtraField[]>([]);
-    // Keep track of the original state for dirty checking
     const [originalExtraFields, setOriginalExtraFields] = useState<ExtraField[]>([]);
     const [showAddModal, setShowAddModal] = useState(false);
     const [newField, setNewField] = useState<Partial<ExtraField>>({
@@ -32,7 +31,7 @@ export function AdminFormBuilder() {
     const isDirty = !deepEqual(extraFields, originalExtraFields);
 
     // Fetch form template
-    const { data: formTemplate, isLoading, error: queryError } = useQuery({
+    const { data: formTemplate, isLoading } = useQuery({
         queryKey: ['form', formId],
         queryFn: async () => {
             try {
@@ -45,10 +44,9 @@ export function AdminFormBuilder() {
             }
         },
         staleTime: 60000,
-        retry: 1, // Don't retry too many times on 404
+        retry: 1,
     });
 
-    // Initialize fields when data loads - only if not already initialized or if data changed significantly
     useEffect(() => {
         if (formTemplate) {
             if (formTemplate.permanentFields) {
@@ -61,7 +59,6 @@ export function AdminFormBuilder() {
         }
     }, [formTemplate]);
 
-    // Save mutation
     const saveMutation = useMutation({
         mutationFn: (fields: ExtraField[]) =>
             apiFetch(`/forms/${formId}/fields`, {
@@ -70,7 +67,6 @@ export function AdminFormBuilder() {
             }),
         onSuccess: (data: FormTemplate) => {
             queryClient.invalidateQueries({ queryKey: ['form', formId] });
-            // Update local state to match server response to reset dirty state
             if (data.extraFields) {
                 setExtraFields(data.extraFields);
                 setOriginalExtraFields(data.extraFields);
