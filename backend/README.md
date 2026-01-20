@@ -1,0 +1,285 @@
+# Dynamic Form Backend
+
+A production-ready Express.js backend for managing dynamic candidate application forms with Firebase authentication and Firestore storage.
+
+## 🏗️ Architecture
+
+- **Framework**: Express.js (Node.js)
+- **Database**: Firebase Firestore
+- **Authentication**: Firebase Auth (Google Sign-In)
+- **Validation**: Zod
+- **Authorization**: Email-based admin whitelist
+
+## 📋 Prerequisites
+
+- Node.js (v16 or higher)
+- npm or yarn
+- Firebase project with:
+  - Authentication enabled (Google provider)
+  - Firestore database created
+  - Service account key downloaded
+
+## 🚀 Firebase Setup
+
+### 1. Create Firebase Project
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Click "Add project" and follow the wizard
+3. Once created, navigate to your project dashboard
+
+### 2. Enable Google Authentication
+
+1. In Firebase Console, go to **Authentication** → **Sign-in method**
+2. Click on **Google** provider
+3. Toggle **Enable** and click **Save**
+
+### 3. Create Firestore Database
+
+1. In Firebase Console, go to **Firestore Database**
+2. Click **Create database**
+3. Choose **Start in production mode** (we'll handle security via backend)
+4. Select your preferred region
+5. Click **Enable**
+
+### 4. Generate Service Account Key
+
+1. In Firebase Console, go to **Project Settings** (gear icon) → **Service accounts**
+2. Click **Generate new private key**
+3. Click **Generate key** - a JSON file will download
+4. **Rename** the downloaded file to `serviceAccountKey.json`
+5. **Move** it to the `backend/` directory (same level as `server.js`)
+
+⚠️ **IMPORTANT**: Never commit `serviceAccountKey.json` to version control!
+
+## 📦 Installation
+
+1. **Clone the repository and navigate to backend**:
+   ```bash
+   cd backend
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables**:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. **Edit `.env` file**:
+   ```env
+   PORT=4000
+   FIREBASE_SERVICE_ACCOUNT_PATH=./serviceAccountKey.json
+   ADMIN_EMAILS=your-email@gmail.com,reviewer@company.com
+   ```
+
+   Replace the admin emails with your actual email addresses.
+
+## 🎯 Running the Server
+
+### Development Mode (with auto-reload)
+```bash
+npm run dev
+```
+
+### Production Mode
+```bash
+npm start
+```
+
+The server will start on `http://localhost:4000` (or your configured PORT).
+
+## 📡 API Endpoints
+
+### Health Check
+- **GET** `/health`
+  - Returns server status
+  - No authentication required
+
+### Forms (Authenticated)
+- **GET** `/forms/:formId`
+  - Fetch form template with extra fields
+  - Requires: Firebase ID token
+
+### Forms (Admin Only)
+- **POST** `/forms`
+  - Create a new form
+  - Body: `{ "title": "Form Title" }` (optional)
+  - Requires: Admin authentication
+
+- **PUT** `/forms/:formId/fields`
+  - Update extra fields for a form
+  - Body: `{ "extraFields": [...] }`
+  - Requires: Admin authentication
+
+### Submissions (Authenticated)
+- **POST** `/forms/:formId/submissions`
+  - Submit a candidate application
+  - Body: `{ "staticValues": {...}, "extraValues": {...} }`
+  - Requires: Firebase ID token
+
+### Submissions (Admin Only)
+- **GET** `/admin/forms/:formId/submissions`
+  - List all submissions for a form
+  - Requires: Admin authentication
+
+- **GET** `/admin/submissions/:submissionId`
+  - Get single submission details
+  - Requires: Admin authentication
+
+## 🔐 Authentication
+
+All API requests (except `/health`) require a Firebase ID token in the Authorization header:
+
+```
+Authorization: Bearer <firebase_id_token>
+```
+
+### How to Get ID Token (Frontend)
+
+```javascript
+const token = await firebase.auth().currentUser.getIdToken();
+```
+
+## 👤 Static Fields
+
+The following 11 fields are hard-coded and cannot be modified:
+
+**Required Fields:**
+- `candidateName`
+- `candidateEmail`
+- `candidatePhone`
+- `primarySkillSet`
+- `candidateLocation`
+- `preferredJobLocation`
+- `experience` (number)
+
+**Optional Fields:**
+- `secondarySkillSet`
+- `secondaryPreferredJobLocation`
+- `coreExperience` (textarea)
+- `expectation` (number)
+
+## 🎨 Extra Fields
+
+Admins can create custom fields with the following properties:
+
+```json
+{
+  "id": "unique_field_id",
+  "label": "Field Label",
+  "type": "text|number|textarea",
+  "required": true|false,
+  "active": true|false,
+  "order": 0
+}
+```
+
+## 📁 Project Structure
+
+```
+backend/
+├── server.js                    # Main Express server
+├── firebaseAdmin.js             # Firebase Admin SDK setup
+├── middleware/
+│   └── auth.js                  # Authentication & authorization
+├── routes/
+│   ├── forms.js                 # Form management routes
+│   └── submissions.js           # Submission routes
+├── constants/
+│   └── staticFields.js          # Static field definitions
+├── validation/
+│   └── schemas.js               # Zod validation schemas
+├── .env                         # Environment variables (not in git)
+├── .env.example                 # Environment template
+├── .gitignore                   # Git ignore rules
+├── package.json                 # Dependencies
+└── README.md                    # This file
+```
+
+## 🛡️ Security Features
+
+- ✅ Firebase token verification on all protected routes
+- ✅ Email-based admin authorization
+- ✅ Input validation using Zod schemas
+- ✅ Static field whitelisting
+- ✅ Extra field validation against active template
+- ✅ Service account key excluded from version control
+
+## 🧪 Testing the API
+
+### 1. Create a Form (Admin)
+```bash
+curl -X POST http://localhost:4000/forms \
+  -H "Authorization: Bearer YOUR_FIREBASE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Software Engineer Application"}'
+```
+
+### 2. Add Extra Fields (Admin)
+```bash
+curl -X PUT http://localhost:4000/forms/FORM_ID/fields \
+  -H "Authorization: Bearer YOUR_FIREBASE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "extraFields": [
+      {
+        "id": "f1",
+        "label": "Last Company",
+        "type": "text",
+        "required": false,
+        "active": true,
+        "order": 0
+      }
+    ]
+  }'
+```
+
+### 3. Submit Application (Candidate)
+```bash
+curl -X POST http://localhost:4000/forms/FORM_ID/submissions \
+  -H "Authorization: Bearer YOUR_FIREBASE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "staticValues": {
+      "candidateName": "John Doe",
+      "candidateEmail": "john@example.com",
+      "candidatePhone": "+1234567890",
+      "primarySkillSet": "JavaScript, React",
+      "candidateLocation": "New York",
+      "preferredJobLocation": "Remote",
+      "experience": 5
+    },
+    "extraValues": {
+      "f1": "Google"
+    }
+  }'
+```
+
+## 🐛 Troubleshooting
+
+### "Failed to load service account key"
+- Ensure `serviceAccountKey.json` is in the `backend/` directory
+- Check that `FIREBASE_SERVICE_ACCOUNT_PATH` in `.env` is correct
+
+### "Unauthorized" errors
+- Verify Firebase ID token is valid and not expired
+- Check Authorization header format: `Bearer <token>`
+
+### "Forbidden" errors
+- Ensure your email is in the `ADMIN_EMAILS` list in `.env`
+- Email comparison is case-insensitive
+
+### Port already in use
+- Change `PORT` in `.env` to a different value
+- Or kill the process using port 4000
+
+## 📝 License
+
+ISC
+
+## 👨‍💻 Author
+
+Built with ❤️ for dynamic form management
