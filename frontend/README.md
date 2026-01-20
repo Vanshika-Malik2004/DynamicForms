@@ -53,30 +53,7 @@ frontend/
 
 ## 🚀 Setup & Installation
 
-1.  **Navigate to the frontend directory**:
-    ```bash
-    cd frontend
-    ```
-
-2.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
-
-3.  **Configure Environment**:
-    Create a `.env` file based on `.env.example`:
-    ```env
-    VITE_FIREBASE_API_KEY=...
-    VITE_FIREBASE_AUTH_DOMAIN=...
-    VITE_API_BASE_URL=http://localhost:4000
-    VITE_ADMIN_EMAILS=admin@example.com
-    ```
-
-4.  **Run Development Server**:
-    ```bash
-    npm run dev
-    ```
-    Access the app at `http://localhost:5173`
+1. Check out the Project readme for setup
 
 ## 🛡️ Key Components
 
