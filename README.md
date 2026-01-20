@@ -52,9 +52,10 @@ The backend handles API requests, validation, and database interactions.
     ADMIN_EMAILS=admin@test.com
     ```
     Replace the admin@test.com by your email to get the admin privilages
-    
 
-5.  **Start the Server:**
+    I have attached the serviceAccountKey.json file in the email copy it into the backend folder.
+
+6.  **Start the Server:**
     ```bash
     npm run dev
     ```
