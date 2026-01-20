@@ -1,8 +1,6 @@
 require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
-
 // routes
 const formsRouter = require('./routes/forms');
 const submissionsRouter = require('./routes/submissions');
@@ -11,12 +9,11 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Middleware Configuration
-const cors = require("cors");
 const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:3000",
-    "https://dynamic-forms-hazel.vercel.app/login",
+    "https://dynamic-forms-hazel.vercel.app",
 ];
 
 app.use(
